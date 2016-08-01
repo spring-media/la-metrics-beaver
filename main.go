@@ -23,16 +23,6 @@ func main() {
 
 	flag.Parse()
 
-	fmt.Println("namespace:", *namespace)
-	fmt.Println("metricName:", *metricName)
-	fmt.Println("dimensionName:", *dimensionName)
-	fmt.Println("dimensionValue:", *dimensionValue)
-	fmt.Println("monitoringType:", *monitoringType)
-	fmt.Println("statistics:", *statistics)
-	fmt.Println("awsRegion:", *awsRegion)
-	fmt.Println("awsAccessKey", *awsAccessKey)
-	fmt.Println("awsSecretKey", *awsSecretKey)
-
 	var period int64
 	var startTime time.Time
 
