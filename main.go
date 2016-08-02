@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,65 +11,49 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 )
 
-var namespace = flag.String("namespace", "", "the namespace of the metric")
-var metricName = flag.String("metric-name", "", "the name of the desired metric")
-var dimensionName = flag.String("dimension-name", "", "the name of the metric's dimension")
-var dimensionValue = flag.String("dimension-value", "", "the value of the metric's dimension")
-var monitoringType = flag.String("monitoring-type", "", "monitoring type, choose between basic and detailed")
-var statistics = flag.String("statistics", "", "Minimum, Maximum, Average, Sum, SampleCount")
-var awsRegion = flag.String("aws-region", "eu-central-1", "AWS region")
-var period int64
-var startTime time.Time
+var statsMap = map[string]bool{"Minimum": true, "Maximum": true, "Average": true, "Sum": true, "SampleCount": true}
 
 func main() {
+	var (
+		namespace          = flag.String("namespace", "", "metric namespace, must not be empty")
+		metricName         = flag.String("metric.name", "", "metric name, must not be empty")
+		dimensionName      = flag.String("dimension.name", "", "metric dimension name, must not be empty")
+		dimensionValue     = flag.String("dimension.value", "", "metric dimension value, must not be empty")
+		monitoringDetailed = flag.Bool("detailed", false, "monitoring resoution: 1m (else: 5m)")
+		statistics         = flag.String("stats", "Average", "possible values: Minimum, Maximum, Average, Sum, SampleCount")
+		awsRegion          = flag.String("aws.region", "eu-central-1", "AWS region")
+		period             = 5 * time.Minute
+	)
 	flag.Parse()
 
-	if *monitoringType == "detailed" {
-		startTime = oneMinuteAgo()
-		period = 60
-	} else {
-		startTime = fiveMinutesAgo()
-		period = 360
+	if *monitoringDetailed {
+		period = time.Minute
 	}
+	startTime := time.Now().Add(-1 * period)
 
-	svc := cloudwatch.New(session.New(), aws.NewConfig().WithRegion(*awsRegion))
-
-	getMetricStatistics(svc)
-}
-
-func getMetricStatistics(svc *cloudwatch.CloudWatch) {
-	params := &cloudwatch.GetMetricStatisticsInput{
-		EndTime:    aws.Time(time.Now()),
-		MetricName: aws.String(*metricName),
-		Namespace:  aws.String(*namespace),
-		Period:     aws.Int64(period),
-		StartTime:  aws.Time(startTime),
-		Statistics: []*string{
-			aws.String(*statistics),
-		},
-		Dimensions: []*cloudwatch.Dimension{
-			{
-				Name:  aws.String(*dimensionName),
-				Value: aws.String(*dimensionValue),
-			},
-		},
-		//Unit: aws.String("Seconds"),
-	}
-
-	resp, err := svc.GetMetricStatistics(params)
-
-	if err != nil {
-		fmt.Println(err.Error())
+	if !statsMap[*statistics] || *namespace == "" || *dimensionName == "" || *dimensionValue == "" {
+		flag.Usage()
 		return
 	}
 
+	cloudwatchCli := cloudwatch.New(session.New(), aws.NewConfig().WithRegion(*awsRegion))
+
+	params := cloudwatch.GetMetricStatisticsInput{
+		EndTime:    aws.Time(time.Now()),
+		MetricName: metricName,
+		Namespace:  namespace,
+		Period:     aws.Int64(int64(period)),
+		StartTime:  &startTime,
+		Statistics: []*string{statistics},
+		Dimensions: []*cloudwatch.Dimension{{
+			Name:  dimensionName,
+			Value: dimensionValue,
+		}},
+	}
+	resp, err := cloudwatchCli.GetMetricStatistics(&params)
+	if err != nil {
+		log.Fatalf("Could not get metric statistics for %#v: %v", params, err)
+	}
+
 	fmt.Println(resp.Datapoints[0])
-}
-
-func oneMinuteAgo() time.Time {
-	return time.Now().Add(-1 * time.Minute)
-}
-
-func fiveMinutesAgo() time.Time {
-	return time.Now().Add(-5 * time.Minute)
 }
