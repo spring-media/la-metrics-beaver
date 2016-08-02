@@ -18,8 +18,6 @@ func main() {
 	monitoringType := flag.String("monitoring-type", "", "monitoring type, choose between basic and detailed")
 	statistics := flag.String("statistics", "", "Minimum, Maximum, Average, Sum, SampleCount")
 	awsRegion := flag.String("aws-region", "eu-central-1", "AWS region")
-	awsAccessKey := flag.String("aws-access-key", "", "AWS access key")
-	awsSecretKey := flag.String("aws-secret-key", "", "AWS secret key")
 
 	flag.Parse()
 
