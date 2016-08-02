@@ -10,19 +10,18 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 )
 
+var namespace = flag.String("namespace", "", "the namespace of the metric")
+var metricName = flag.String("metric-name", "", "the name of the desired metric")
+var dimensionName = flag.String("dimension-name", "", "the name of the metric's dimension")
+var dimensionValue = flag.String("dimension-value", "", "the value of the metric's dimension")
+var monitoringType = flag.String("monitoring-type", "", "monitoring type, choose between basic and detailed")
+var statistics = flag.String("statistics", "", "Minimum, Maximum, Average, Sum, SampleCount")
+var awsRegion = flag.String("aws-region", "eu-central-1", "AWS region")
+var period int64
+var startTime time.Time
+
 func main() {
-	namespace := flag.String("namespace", "", "the namespace of the metric")
-	metricName := flag.String("metric-name", "", "the name of the desired metric")
-	dimensionName := flag.String("dimension-name", "", "the name of the metric's dimension")
-	dimensionValue := flag.String("dimension-value", "", "the value of the metric's dimension")
-	monitoringType := flag.String("monitoring-type", "", "monitoring type, choose between basic and detailed")
-	statistics := flag.String("statistics", "", "Minimum, Maximum, Average, Sum, SampleCount")
-	awsRegion := flag.String("aws-region", "eu-central-1", "AWS region")
-
 	flag.Parse()
-
-	var period int64
-	var startTime time.Time
 
 	if *monitoringType == "detailed" {
 		startTime = oneMinuteAgo()
@@ -34,6 +33,10 @@ func main() {
 
 	svc := cloudwatch.New(session.New(), aws.NewConfig().WithRegion(*awsRegion))
 
+	getMetricStatistics(svc)
+}
+
+func getMetricStatistics(svc *cloudwatch.CloudWatch) {
 	params := &cloudwatch.GetMetricStatisticsInput{
 		EndTime:    aws.Time(time.Now()),
 		MetricName: aws.String(*metricName),
@@ -59,7 +62,7 @@ func main() {
 		return
 	}
 
-	fmt.Println(resp)
+	fmt.Println(resp.Datapoints[0])
 }
 
 func oneMinuteAgo() time.Time {
