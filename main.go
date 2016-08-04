@@ -42,7 +42,7 @@ func main() {
 		EndTime:    aws.Time(time.Now()),
 		MetricName: metricName,
 		Namespace:  namespace,
-		Period:     aws.Int64(int64(period)),
+		Period:     aws.Int64(int64(period.Seconds())),
 		StartTime:  &startTime,
 		Statistics: []*string{statistics},
 		Dimensions: []*cloudwatch.Dimension{{
