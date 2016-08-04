@@ -6,9 +6,10 @@ Fetches metrics from cloudwatch. It can be used with a monitoring system like na
 
 #### Examples
 	
-	metrics-beaver -namespace AWS/ELB \
-	-metric-name RequestCount \
-	-monitoring-type detailed \
-	-statistics Sum \
-	-dimension-name LoadBalancerName \
-	-dimension-value elb-foobar
+	metrics-beaver \
+	  -namespace AWS/ELB \
+	  -metric.name RequestCount \
+	  -dimension.name LoadBalancerName \
+	  -dimension.value elb-foobar
+	  -stats Sum \
+	  -detailed
