@@ -55,7 +55,10 @@ func main() {
 		log.Fatalf("Could not get metric statistics for %#v: %v", params, err)
 	}
 
-	if len(resp.Datapoints) != 0 {
+	if len(resp.Datapoints) == 0 {
+		// no data
+		fmt.Println("0")
+	} else {
 		switch *statistics {
 		case "Sum":
 			fmt.Println(*resp.Datapoints[0].Sum)
@@ -70,8 +73,5 @@ func main() {
 		default:
 			fmt.Println(*resp.Datapoints[0].Sum)
 		}
-
-	} else {
-		fmt.Println("nodata")
 	}
 }
