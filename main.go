@@ -50,7 +50,9 @@ func main() {
 			Value: dimensionValue,
 		}},
 	}
+
 	resp, err := cloudwatchCli.GetMetricStatistics(&params)
+
 	if err != nil {
 		log.Fatalf("Could not get metric statistics for %#v: %v", params, err)
 	}
