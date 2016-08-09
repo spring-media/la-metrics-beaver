@@ -2,7 +2,7 @@
 Fetches metrics from cloudwatch. It can be used with a monitoring system like nagios or zabbix to fetch metrics from cloudwath.
 
 #### Installing
-	go get github.com/mrsn/metrics-beaver 
+	go get github.com/weltn24/metrics-beaver 
 
 #### Examples
 	
