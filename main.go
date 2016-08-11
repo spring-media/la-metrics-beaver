@@ -21,7 +21,7 @@ func main() {
 		dimensionValue     = flag.String("dimension.value", "", "metric dimension value, must not be empty")
 		monitoringDetailed = flag.Bool("detailed", false, "monitoring resoution: 1m (else: 5m)")
 		statistics         = flag.String("stats", "Average", "possible values: Minimum, Maximum, Average, Sum, SampleCount")
-		awsRegion          = flag.String("aws.region", "eu-central-1", "AWS region")
+		awsRegion          = flag.String("aws.region", "eu-central-1", "AWS region, for CloudFront always use us-east-1")
 		period             = 5 * time.Minute
 	)
 	flag.Parse()
@@ -38,6 +38,20 @@ func main() {
 
 	cloudwatchCli := cloudwatch.New(session.New(), aws.NewConfig().WithRegion(*awsRegion))
 
+	dimensions := []*cloudwatch.Dimension{
+		{
+			Name:  dimensionName,
+			Value: dimensionValue,
+		},
+	}
+
+	if *namespace == "AWS/CloudFront" {
+		// if not global region, cloudwatch always return 0 for cloudfront
+		dimensions = append(dimensions, &cloudwatch.Dimension{
+			Name:  aws.String("Region"),
+			Value: aws.String("Global")})
+	}
+
 	params := cloudwatch.GetMetricStatisticsInput{
 		EndTime:    aws.Time(time.Now()),
 		MetricName: metricName,
@@ -45,10 +59,7 @@ func main() {
 		Period:     aws.Int64(int64(period.Seconds())),
 		StartTime:  &startTime,
 		Statistics: []*string{statistics},
-		Dimensions: []*cloudwatch.Dimension{{
-			Name:  dimensionName,
-			Value: dimensionValue,
-		}},
+		Dimensions: dimensions,
 	}
 
 	resp, err := cloudwatchCli.GetMetricStatistics(&params)
