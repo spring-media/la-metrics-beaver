@@ -15,21 +15,19 @@ var statsMap = map[string]bool{"Minimum": true, "Maximum": true, "Average": true
 
 func main() {
 	var (
-		namespace          = flag.String("namespace", "", "metric namespace, must not be empty")
-		metricName         = flag.String("metric.name", "", "metric name, must not be empty")
-		dimensionName      = flag.String("dimension.name", "", "metric dimension name, must not be empty")
-		dimensionValue     = flag.String("dimension.value", "", "metric dimension value, must not be empty")
-		monitoringDetailed = flag.Bool("detailed", false, "monitoring resoution: 1m (else: 5m)")
-		statistics         = flag.String("stats", "Average", "possible values: Minimum, Maximum, Average, Sum, SampleCount")
-		awsRegion          = flag.String("aws.region", "eu-central-1", "AWS region, for CloudFront always use us-east-1")
-		period             = 1440 * time.Minute
+		namespace      = flag.String("namespace", "", "metric namespace, must not be empty")
+		metricName     = flag.String("metric.name", "", "metric name, must not be empty")
+		dimensionName  = flag.String("dimension.name", "", "metric dimension name, must not be empty")
+		dimensionValue = flag.String("dimension.value", "", "metric dimension value, must not be empty")
+		period         = flag.Duration("period", time.Minute, "the time span in minutes like 1m, 2m, 1440m.")
+		statistics     = flag.String("stats", "Average", "possible values: Minimum, Maximum, Average, Sum, SampleCount")
+		awsRegion      = flag.String("aws.region", "eu-central-1", "AWS region")
 	)
 	flag.Parse()
 
-	if *monitoringDetailed {
-		period = time.Minute
-	}
-	startTime := time.Now().Add(-1 * period)
+	// Normally we are using a large time span and a smaller period.
+	// Here we are seeking for only one datapoint.
+	startTime := time.Now().Add(-1 * (*period))
 
 	if !statsMap[*statistics] || *namespace == "" || *dimensionName == "" || *dimensionValue == "" {
 		flag.Usage()
@@ -77,7 +75,7 @@ func main() {
 	if len(resp.Datapoints) == 0 {
 		// no data
 		fmt.Println("0")
-	} else {
+	} else if len(resp.Datapoints) == 1 {
 		switch *statistics {
 		case "Sum":
 			fmt.Println(*resp.Datapoints[0].Sum)
@@ -92,5 +90,7 @@ func main() {
 		default:
 			fmt.Println(*resp.Datapoints[0].Sum)
 		}
+	} else {
+		log.Fatalf("There should be no more than one Datapoint: %v", resp)
 	}
 }
