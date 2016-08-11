@@ -22,7 +22,7 @@ func main() {
 		monitoringDetailed = flag.Bool("detailed", false, "monitoring resoution: 1m (else: 5m)")
 		statistics         = flag.String("stats", "Average", "possible values: Minimum, Maximum, Average, Sum, SampleCount")
 		awsRegion          = flag.String("aws.region", "eu-central-1", "AWS region, for CloudFront always use us-east-1")
-		period             = 5 * time.Minute
+		period             = 1440 * time.Minute
 	)
 	flag.Parse()
 
@@ -50,6 +50,12 @@ func main() {
 		dimensions = append(dimensions, &cloudwatch.Dimension{
 			Name:  aws.String("Region"),
 			Value: aws.String("Global")})
+	}
+
+	if *namespace == "AWS/Billing" {
+		dimensions = append(dimensions, &cloudwatch.Dimension{
+			Name:  aws.String("Currency"),
+			Value: aws.String("USD")})
 	}
 
 	params := cloudwatch.GetMetricStatisticsInput{
