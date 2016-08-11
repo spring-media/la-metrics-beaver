@@ -12,4 +12,4 @@ Fetches metrics from cloudwatch. It can be used with a monitoring system like na
 	  -dimension.name LoadBalancerName \
 	  -dimension.value elb-foobar
 	  -stats Sum \
-	  -detailed
+	  -period 1m
