@@ -10,6 +10,6 @@ Fetches metrics from cloudwatch. It can be used with a monitoring system like na
 	  -namespace AWS/ELB \
 	  -metric.name RequestCount \
 	  -dimension.name LoadBalancerName \
-	  -dimension.value elb-foobar
+	  -dimension.value elb-foobar \
 	  -stats Sum \
 	  -period 1m
