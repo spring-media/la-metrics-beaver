@@ -17,8 +17,8 @@ func main() {
 	var (
 		namespace      = flag.String("namespace", "", "metric namespace, must not be empty")
 		metricName     = flag.String("metric.name", "", "metric name, must not be empty")
-		dimensionName  = flag.String("dimension.name", "", "metric dimension name, must not be empty")
-		dimensionValue = flag.String("dimension.value", "", "metric dimension value, must not be empty")
+		dimensionName  = flag.String("dimension.name", "", "metric dimension name")
+		dimensionValue = flag.String("dimension.value", "", "metric dimension value")
 		period         = flag.Duration("period", time.Minute, "the time span in minutes like 1m, 2m, 1440m.")
 		statistics     = flag.String("stats", "Average", "possible values: Minimum, Maximum, Average, Sum, SampleCount")
 		awsRegion      = flag.String("aws.region", "eu-central-1", "AWS region")
@@ -29,18 +29,22 @@ func main() {
 	// Here we are seeking for only one datapoint.
 	startTime := time.Now().Add(-1 * (*period))
 
-	if !statsMap[*statistics] || *namespace == "" || *dimensionName == "" || *dimensionValue == "" {
+	if !statsMap[*statistics] || *namespace == "" {
 		flag.Usage()
 		return
 	}
 
 	cloudwatchCli := cloudwatch.New(session.New(), aws.NewConfig().WithRegion(*awsRegion))
 
-	dimensions := []*cloudwatch.Dimension{
-		{
-			Name:  dimensionName,
-			Value: dimensionValue,
-		},
+	dimensions := []*cloudwatch.Dimension{}
+
+	if !(*dimensionName == "" || *dimensionValue == "") {
+		dimensions = []*cloudwatch.Dimension{
+			{
+				Name:  dimensionName,
+				Value: dimensionValue,
+			},
+		}
 	}
 
 	if *namespace == "AWS/CloudFront" {
@@ -75,6 +79,7 @@ func main() {
 	if len(resp.Datapoints) == 0 {
 		// no data
 		fmt.Println("0")
+
 	} else if len(resp.Datapoints) == 1 {
 		switch *statistics {
 		case "Sum":
