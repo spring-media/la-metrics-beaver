@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -38,12 +39,22 @@ func main() {
 
 	dimensions := []*cloudwatch.Dimension{}
 
-	if !(*dimensionName == "" || *dimensionValue == "") {
-		dimensions = []*cloudwatch.Dimension{
-			{
-				Name:  dimensionName,
-				Value: dimensionValue,
-			},
+	dimensionsNames := strings.Split(*dimensionName, ",")
+	dimensionsValues := strings.Split(*dimensionValue, ",")
+
+	empty := (len(dimensionsNames) < 1 || len(dimensionsValues) < 1)
+	sameCount := len(dimensionsNames) == len(dimensionsValues)
+	if !empty && sameCount {
+		for i := 0; i < len(dimensionsNames); i++ {
+			dimN := dimensionsNames[i]
+			dimV := dimensionsValues[i]
+
+			dim := cloudwatch.Dimension{
+				Name:  &dimN,
+				Value: &dimV,
+			}
+
+			dimensions = append(dimensions, &dim)
 		}
 	}
 
