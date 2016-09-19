@@ -41,6 +41,8 @@ func main() {
 
 	dimensionsNames := strings.Split(*dimensionName, ",")
 	dimensionsValues := strings.Split(*dimensionValue, ",")
+	dimensionsNames = removeEmptyStrings(dimensionsNames)
+	dimensionsValues = removeEmptyStrings(dimensionsValues)
 
 	empty := (len(dimensionsNames) < 1 || len(dimensionsValues) < 1)
 	sameCount := len(dimensionsNames) == len(dimensionsValues)
@@ -109,4 +111,14 @@ func main() {
 	} else {
 		log.Fatalf("There should be no more than one Datapoint: %v", resp)
 	}
+}
+
+func removeEmptyStrings(strings []string) []string {
+	var result []string
+	for _, str := range strings {
+		if str != "" {
+			result = append(result, str)
+		}
+	}
+	return result
 }
