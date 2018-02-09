@@ -1,5 +1,5 @@
 PROJECT_NAME=metrics-beaver
-VERSION=v0.3
+VERSION=v0.4
 
 all: bin
 
