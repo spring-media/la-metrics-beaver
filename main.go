@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
+	"github.com/aws/aws-sdk-go/service/support"
 )
 
 var statsMap = map[string]bool{"Minimum": true, "Maximum": true, "Average": true, "Sum": true, "SampleCount": true}
@@ -25,6 +26,17 @@ func main() {
 		awsRegion      = flag.String("aws.region", "eu-central-1", "AWS region")
 	)
 	flag.Parse()
+
+	if *namespace == "AWS/TrustedAdvisor" && *metricName == "check" {
+		status, err := fetchTrustedAdvisorCheckResult(*awsRegion, *dimensionName)
+		if err != nil {
+			log.Fatalf("Could not get trusted advisor checks for %v: %v", dimensionName, err)
+			return
+		}
+
+		fmt.Println(status)
+		return
+	}
 
 	// Normally we are using a large time span and a smaller period.
 	// Here we are seeking for only one datapoint.
@@ -121,4 +133,18 @@ func removeEmptyStrings(strings []string) []string {
 		}
 	}
 	return result
+}
+
+func fetchTrustedAdvisorCheckResult(region string, checkID string) (string, error) {
+	supportCli := support.New(session.New(), aws.NewConfig().WithRegion(region))
+	resp, err := supportCli.DescribeTrustedAdvisorCheckResult(&support.DescribeTrustedAdvisorCheckResultInput{
+		CheckId:  aws.String(checkID),
+		Language: aws.String("en"),
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	return *resp.Result.Status, nil
 }
