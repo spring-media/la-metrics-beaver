@@ -1,4 +1,4 @@
-PROJECT_NAME=metrics-beaver
+PROJECT_NAME=la-metrics-beaver
 VERSION=v0.4
 
 all: bin
